@@ -254,8 +254,8 @@ class DBHandler(RelationHandler):
         logger.debug("Setting up DB event handler")
         # Import here to avoid import errors if ops_sunbeam is being used
         # with a charm that doesn't want a DBHandler
-        # and doesn't install this database_requires library.
-        from charms.data_platform_libs.v0.database_requires import (
+        # and doesn't install this data_interfaces library.
+        from charms.data_platform_libs.v0.data_interfaces import (
             DatabaseRequires,
         )
 
