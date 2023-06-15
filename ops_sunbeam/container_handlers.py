@@ -31,6 +31,7 @@ from typing import (
 
 import ops.charm
 import ops.pebble
+import tenacity
 from ops.model import (
     ActiveStatus,
     BlockedStatus,
@@ -301,6 +302,28 @@ class PebbleHandler(ops.charm.Object):
                     f"Restarting {service_name} in {self.container_name}"
                 )
                 container.restart(service_name)
+
+    def wait_check(
+        self, check_name: str, wait: int = 10, retries: int = 5
+    ) -> None:
+        """Wait for a check to be ready.
+
+        :param check_name: Name of check to wait for.
+        """
+        container = self.charm.unit.get_container(self.container_name)
+
+        @tenacity.retry(
+            wait=tenacity.wait_fixed(wait),
+            stop=tenacity.stop_after_attempt(retries),
+        )
+        def _check():
+            check = container.get_check(check_name)
+            logger.debug(f"{check_name!r} check: {check}")
+            is_up = check.status == ops.pebble.CheckStatus.UP
+            if not is_up:
+                raise Exception(f"Check {check_name} not ready")
+
+        _check()
 
 
 class ServicePebbleHandler(PebbleHandler):
